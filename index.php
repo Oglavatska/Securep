@@ -49,13 +49,31 @@
 // DatenBank verbindung
 $pdo = new PDO("mysql:host=localhost;dbname=db_training", "root", "");
 
-$filename = "E:/Lena/Git/Project1/log_files/test.log";
-function save_log_file($pdo, $filename)
+$filename = "E:/Lena/Git/Project1/log_files/updatev12-access-pseudonymized.log";
+// Um grosse Datei in der DB in kleineren Blcken überzutragen:
+$lines_per_run = 2000;
+function save_log_file($pdo, $filename, $lines_per_run)
 {
-        if ($handle = fopen($filename, "r")) {
-            $pdo->exec("TRUNCATE TABLE log_entries");
-            while (($line = fgets($handle)) !== false) {
+    session_start();
+    //Fortschritt aus Session holen
+    $last_position = $_SESSION['logfile_position'] ?? 0;
+    $line_count = $_SESSION['logfile_line'] ?? 0;
 
+    // Datei im Lesemodus öffnen:
+    $handle = fopen($filename, "r");
+    // an letzte bekannte Stelle springen
+    fseek($handle, $last_position);
+
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    $processed = 0;
+    if ($handle) {
+            $pdo->exec("TRUNCATE TABLE log_entries");
+            while (!feof($handle) && $processed < $lines_per_run) {
+                $line = fgets($handle);
+                if ($line === false) {
+                    break;
+                }
                 // pro Zeile alle wichtige Werte holen:
                 $log = htmlspecialchars($line);
 
@@ -79,7 +97,7 @@ function save_log_file($pdo, $filename)
                 }
                 // serial
                 $serial_positon = strpos($log, "serial=");
-                if ($specs_position !== false) {
+                if ($serial_positon !== false) {
                     // Den String nach dem Wort abschneiden
                     $serial = strtok(substr($log, $serial_positon + strlen("serial=")), " ");
                 } else {
@@ -110,10 +128,21 @@ function save_log_file($pdo, $filename)
                     ':cpu' => $cpu,
                     ':access_time' => $access_time,
                 ]);
+                $processed++;
+                $line_count++;
             }
-            fclose($handle);
-            echo "<div> - Die Datei <strong>" . basename($filename) . "</strong> wurde erfolgreich gespeichert &#10004;</div>";
+        $_SESSION['logfile_position'] = ftell($handle); // aktuelle Position merken
+        $_SESSION['logfile_line'] = $line_count;
 
+        if (!feof($handle)) {
+            echo "🔄 $line_count Zeilen verarbeitet. Nächster Block folgt...";
+            echo "<meta http-equiv='refresh' content='1'>"; // in 1 Sekunde neu laden
+            flush();
+            usleep(100000);
+        } else {
+            echo "✅ Import abgeschlossen: $line_count Zeilen.";
+            session_destroy();
+        }
     } else {
         echo "<div> - Die Datei <strong>" . basename($filename) . "</strong> existiert nicht!</div>";
     }
@@ -125,6 +154,7 @@ function get_frequent_license($pdo)
     $license = $pdo->query("
         SELECT serial, access_time, COUNT(*) AS access_count
         FROM log_entries
+        WHERE serial IS NOT NUll AND access_time IS NOT NULL
         GROUP BY serial
         ORDER BY access_count DESC
         LIMIT 10
@@ -164,6 +194,7 @@ function get_count_of_license_on_same_device($pdo) {
     $license_repeat = $pdo->query("
         SELECT serial, mac, COUNT(mac) AS device_count
         FROM log_entries
+        WHERE serial IS NOT NUll AND access_time IS NOT NULL AND mac IS NOT NULL
         GROUP BY serial
         ORDER BY device_count DESC
         LIMIT 10
@@ -211,7 +242,7 @@ function get_rows_device($license_repeat) {
 <div class="status">
     <?php
     if (isset($_GET['log_import'])) {
-        save_log_file($pdo, $filename);
+        save_log_file($pdo, $filename,$lines_per_run);
     } ?>
 </div>
 <div class="results">
