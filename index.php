@@ -29,6 +29,18 @@
         .results {
             margin: 20px;
         }
+        table {
+            margin-bottom: 20px;
+        }
+        h3 {
+            margin-top: 20px;
+        }
+        .results_wraper {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
     </style>
 </head>
 
@@ -119,14 +131,14 @@ function get_frequent_license($pdo)
     ");
 
 //    Tabelle mit Ergebnissen
-    echo "<h3>Top 10 der meistgenutzten Lizenz-Seriennummern am </h3>";
+    echo "<div class ='tables'><h3>Top 10 der meistgenutzten Lizenz-Seriennummern</h3>";
     echo '<table style="border: 1px solid #000000;">
         <tr>
             <th style="border: 1px solid #000000; padding: 5px 10px;">Platz</th>
             <th style="border: 1px solid #000000; padding: 5px 10px;">Lizens-Seriennummer</th>
             <th style="border: 1px solid #000000; padding: 5px 10px;">Anzhal des Zugriffs</th>
             <th style="border: 1px solid #000000; padding: 5px 10px;">Datum des Zugriffs</th>
-        </tr>' . get_rows($license);
+        </tr>' . get_rows($license).'</table></div>';
 }
 function get_rows($license)
 {
@@ -145,6 +157,42 @@ function get_rows($license)
     }
     return $rows;
 }
+//    Jedes Gerät hat eine unique MAC-Adresse => durch Erfassun und Zuordnung der
+// MAC-Adresse bei jeder Lizenseabfrage kann ein Gerät eindeutig identifiziert werden
+function get_count_of_license_on_same_device($pdo) {
+
+    $license_repeat = $pdo->query("
+        SELECT serial, mac, COUNT(mac) AS device_count
+        FROM log_entries
+        GROUP BY serial
+        ORDER BY device_count DESC
+        LIMIT 10
+    ");
+    // Tabelle
+    echo "<div class='tables'><h3>Verstöße gegen Ein-Gerät-Regel: Die 10 auffälligsten Lizenz-Seriennummern</h3>";
+    echo '<table style="border: 1px solid #000000;">
+        <tr>
+            <th style="border: 1px solid #000000; padding: 5px 10px;">Platz</th>
+            <th style="border: 1px solid #000000; padding: 5px 10px;">Lizens-Seriennummer</th>
+             <th style="border: 1px solid #000000; padding: 5px 10px;">MAC-Adresse</th>
+            <th style="border: 1px solid #000000; padding: 5px 10px;">Anzhal des Geräts</th>          
+        </tr>' . get_rows_device($license_repeat)."</table></div>";
+}
+function get_rows_device($license_repeat) {
+    $rows = '';
+    $i = 0;
+    foreach ($license_repeat as $row) {
+        $i++;
+        $rows .= '<tr>
+                <td style="border-bottom: 1px solid #000000;  border-left: 1px solid #000000; border-right: 1px solid #000000; padding: 5px 10px;">' . $i . '</td>
+                <td style="border-bottom: 1px solid #000000;  border-left: 1px solid #000000; border-right: 1px solid #000000; padding: 5px 10px;">' . $row['serial'] . '</td>
+                <td style="border-bottom: 1px solid #000000;  border-left: 1px solid #000000; border-right: 1px solid #000000; padding: 5px 10px;">' . $row['mac'] . '</td>
+                <td style="border-bottom: 1px solid #000000;  border-right: 1px solid #000000; padding: 5px 10px; text-align: center;">' . $row['device_count'] . '</td>
+            </tr>';
+    }
+    return $rows;
+}
+
 
 ?>
 <h1>Analysiere die Logdatei</h1>
@@ -169,7 +217,10 @@ function get_rows($license)
 <div class="results">
     <?php
     if (isset($_POST['evaluation'])) {
+        echo "<div class='results_wraper'>";
         get_frequent_license($pdo);
+        get_count_of_license_on_same_device($pdo);
+        echo "</div>";
     }
     ?>
 </div>
