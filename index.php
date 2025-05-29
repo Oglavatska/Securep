@@ -101,4 +101,4 @@ $license = $pdo->query("
         </tr>
     <?php endforeach; ?>
 </body>
-</html>
+</html> //
