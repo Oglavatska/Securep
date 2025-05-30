@@ -205,10 +205,9 @@ function get_count_of_license_on_same_device($pdo) {
     echo '<table style="border: 1px solid #000000;">
         <tr>
             <th style="border: 1px solid #000000; padding: 5px 10px;">Platz</th>
-            <th style="border: 1px solid #000000; padding: 5px 10px;">Lizens-Seriennummer</th>
-             <th style="border: 1px solid #000000; padding: 5px 10px;">MAC-Adresse</th>
-            <th style="border: 1px solid #000000; padding: 5px 10px;">Anzhal des Geräts</th>          
-        </tr>' . get_rows_device($license_repeat)."</table></div>";
+            <th style="border: 1px solid #000000; padding: 5px 10px;">Lizenz-Seriennummer</th>
+            <th style="border: 1px solid #000000; padding: 5px 10px;">Anzahl Geräte</th>
+        </tr>' . get_rows_device($license_repeat) . "</table></div>";
 }
 function get_rows_device($license_repeat) {
     $rows = '';
@@ -216,14 +215,14 @@ function get_rows_device($license_repeat) {
     foreach ($license_repeat as $row) {
         $i++;
         $rows .= '<tr>
-                <td style="border-bottom: 1px solid #000000;  border-left: 1px solid #000000; border-right: 1px solid #000000; padding: 5px 10px;">' . $i . '</td>
-                <td style="border-bottom: 1px solid #000000;  border-left: 1px solid #000000; border-right: 1px solid #000000; padding: 5px 10px;">' . $row['serial'] . '</td>
-                <td style="border-bottom: 1px solid #000000;  border-left: 1px solid #000000; border-right: 1px solid #000000; padding: 5px 10px;">' . $row['mac'] . '</td>
-                <td style="border-bottom: 1px solid #000000;  border-right: 1px solid #000000; padding: 5px 10px; text-align: center;">' . $row['device_count'] . '</td>
-            </tr>';
+            <td style="border: 1px solid #000000; padding: 5px 10px;">' . $i . '</td>
+            <td style="border: 1px solid #000000; padding: 5px 10px;">' . $row['serial'] . '</td>
+            <td style="border: 1px solid #000000; padding: 5px 10px; text-align: center;">' . $row['device_count'] . '</td>
+        </tr>';
     }
     return $rows;
 }
+
 
 
 ?>
