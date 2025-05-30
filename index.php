@@ -49,9 +49,9 @@
 // DatenBank verbindung
 $pdo = new PDO("mysql:host=localhost;dbname=db_training", "root", "");
 
-$filename = "E:/Lena/Git/Project1/log_files/updatev12-access-pseudonymized.log";
+$filename = "./log_files/updatev12-access-pseudonymized.log";
 // Um grosse Datei in der DB in kleineren Blcken überzutragen:
-$lines_per_run = 2000;
+$lines_per_run = 5000;
 function save_log_file($pdo, $filename, $lines_per_run)
 {
     session_start();
@@ -135,12 +135,12 @@ function save_log_file($pdo, $filename, $lines_per_run)
         $_SESSION['logfile_line'] = $line_count;
 
         if (!feof($handle)) {
-            echo "🔄 $line_count Zeilen verarbeitet. Nächster Block folgt...";
+            echo "$line_count Zeilen verarbeitet. Nächster Block folgt...";
             echo "<meta http-equiv='refresh' content='1'>"; // in 1 Sekunde neu laden
             flush();
             usleep(100000);
         } else {
-            echo "✅ Import abgeschlossen: $line_count Zeilen.";
+            echo "Import abgeschlossen: $line_count Zeilen.";
             session_destroy();
         }
     } else {
