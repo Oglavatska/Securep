@@ -82,11 +82,16 @@ function save_log_file($pdo, $filename, $lines_per_run)
 
                 //Datum/Zeit des Zugriffs
                 if (preg_match('/\[(.*?)\]/', $log, $matches)) {
-                    $access_time = new DateTime($matches[1]);
-                    $access_time = $access_time->format("Y-m-d H:i:s");
+                    try {
+                        $access_time = new DateTime($matches[1]);
+                        $access_time = $access_time->format("Y-m-d H:i:s");
+                    } catch (Exception $e) {
+                        $access_time = null; // set to null if parsing fails
+                    }
                 } else {
                     $access_time = null;
                 }
+
 
                 //specs
                 $specs_position = strpos($log, "specs=");
