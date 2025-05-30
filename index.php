@@ -192,10 +192,11 @@ function get_rows($license)
 function get_count_of_license_on_same_device($pdo) {
 
     $license_repeat = $pdo->query("
-        SELECT serial, mac, COUNT(mac) AS device_count
-        FROM log_entries
-        WHERE serial IS NOT NUll AND access_time IS NOT NULL AND mac IS NOT NULL
+        SELECT serial, COUNT(DISTINCT mac) AS device_count
+        FROM db_training.log_entries
+        WHERE serial IS NOT NULL AND mac IS NOT NULL
         GROUP BY serial
+        HAVING device_count > 1
         ORDER BY device_count DESC
         LIMIT 10
     ");
