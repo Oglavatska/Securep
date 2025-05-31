@@ -272,7 +272,7 @@ function get_rows_device($license_repeat) {
         exit;
     }
     ?>
-</div>
+</div> //
 <div class="results">
     <?php
     if (isset($_POST['evaluation'])) {
